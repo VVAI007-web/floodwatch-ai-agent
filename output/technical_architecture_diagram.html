@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloodWatch AI | Core Technical Concepts & System Architecture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #060c18;
+            --bg-card: rgba(15, 23, 42, 0.85);
+            --border-card: rgba(56, 189, 248, 0.2);
+            --accent-cyan: #38bdf8;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-rose: #f43f5e;
+            --accent-amber: #fbbf24;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(129, 140, 248, 0.08) 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            color: var(--text-main);
+            padding: 40px 24px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent-cyan);
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Flow Grid */
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+            position: relative;
+        }
+
+        .stage-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .stage-box:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-cyan);
+        }
+
+        .stage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 12px;
+        }
+
+        .stage-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .stage-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+
+        .concept-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent-cyan);
+        }
+
+        .field-value {
+            font-size: 0.92rem;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        .impl-box {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .code-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        .formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #a78bfa;
+            background: rgba(167, 139, 250, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .safety-box {
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+        .safety-box .field-label { color: var(--accent-rose); }
+        .safety-box .stage-number { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
+
+        .verify-box {
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+        .verify-box .field-label { color: var(--accent-emerald); }
+        .verify-box .stage-number { background: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="badge">Architecture & Systems Specification</div>
+            <h1>FloodWatch AI: Applied Concept Architecture</h1>
+            <p class="subtitle">System decomposition mapping every core technical concept directly to its architectural purpose, mathematical grounding, and implementation module.</p>
+        </header>
+
+        <div class="flow-grid">
+            <!-- 1. Schema & Constraints -->
+            <div class="stage-box">
+                <div class="stage-header">
+                    <div class="stage-title">
+                        <div class="stage-number">01</div>
+                        <div>Constraint-Driven Prompting</div>
+                    </div>
+                    <span class="concept-badge">Boundary Architecture</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Architectural Role</span>
+                    <p class="field-value">Enforces deterministic schema validation and negative constraints to prevent silent data dropouts or uncontrolled telemetry degradation.</p>
+                </div>
+                <div class="impl-box">
+                    <span class="field-label">Where & How Implemented</span>
+                    <span class="code-tag">agent.py ➔ System Prompt & Schema Enforcers</span>
+                    <span class="formula">Rule: "Do NOT silently drop malformed data"</span>
+                </div>
+            </div>
+
+            <!-- 2. ReAct Loops -->
+            <div class="stage-box">
+                <div class="stage-header">
+                    <div class="stage-title">
+                        <div class="stage-number">02</div>
+                        <div>Autonomous ReAct Loops</div>
+                    </div>
+                    <span class="concept-badge">Self-Correction</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Architectural Role</span>
+                    <p class="field-value">Operates goal-directed Observe ➔ Reason ➔ Act ➔ Adjust execution cycles to audit raw data and dynamically heal coordinate inversions.</p>
+                </div>
+                <div class="impl-box">
+                    <span class="field-label">Where & How Implemented</span>
+                    <span class="code-tag">agent.py ➔ run_autonomous_pipeline()</span>
+                    <span class="formula">Self-Heal: [Lon, Lat] ➔ [Lat, Lon] on London Bounding Box</span>
+                </div>
+            </div>
+
+            <!-- 3. HITL Quarantine -->
+            <div class="stage-box safety-box">
+                <div class="stage-header">
+                    <div class="stage-title">
+                        <div class="stage-number">03</div>
+                        <div>Human-in-the-Loop Quarantine</div>
+                    </div>
+                    <span class="concept-badge" style="color: var(--accent-rose);">Safety Gating</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Architectural Role</span>
+                    <p class="field-value">Safety circuit-breaker isolating fatal telemetry failures from processing pipeline, ensuring 100% record conservation without data corruption.</p>
+                </div>
+                <div class="impl-box">
+                    <span class="field-label">Where & How Implemented</span>
+                    <span class="code-tag">agent.py ➔ quarantine_unrecoverable_records()</span>
+                    <span class="formula">Isolation Queue: output/floodwatch_quarantine_audit.csv</span>
+                </div>
+            </div>
+
+            <!-- 4. Geodesic Math -->
+            <div class="stage-box">
+                <div class="stage-header">
+                    <div class="stage-title">
+                        <div class="stage-number">04</div>
+                        <div>Deterministic Geodesy</div>
+                    </div>
+                    <span class="concept-badge">Hallucination Elimination</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Architectural Role</span>
+                    <p class="field-value">Replaces flat Euclidean approximations with spherical trigonometry, grounding spatial proximity assertions with sub-meter accuracy.</p>
+                </div>
+                <div class="impl-box">
+                    <span class="field-label">Where & How Implemented</span>
+                    <span class="code-tag">agent.py ➔ haversine_distance()</span>
+                    <span class="formula">Haversine Great-Circle: R = 6,371,000 meters</span>
+                </div>
+            </div>
+
+            <!-- 5. Spatial DBSCAN -->
+            <div class="stage-box">
+                <div class="stage-header">
+                    <div class="stage-title">
+                        <div class="stage-number">05</div>
+                        <div>Unsupervised Spatial ML</div>
+                    </div>
+                    <span class="concept-badge">Pattern Discovery</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Architectural Role</span>
+                    <p class="field-value">Discovers emergent non-linear flood risk corridors from raw telemetry without requiring predefined geometric zone classifications.</p>
+                </div>
+                <div class="impl-box">
+                    <span class="field-label">Where & How Implemented</span>
+                    <span class="code-tag">agent.py ➔ cluster_inundation_zones()</span>
+                    <span class="formula">DBSCAN: &epsilon; = 650m, min_samples = 3</span>
+                </div>
+            </div>
+
+            <!-- 6. Automated Invariants -->
+            <div class="stage-box verify-box">
+                <div class="stage-header">
+                    <div class="stage-title">
+                        <div class="stage-number">06</div>
+                        <div>Invariant Test Verification</div>
+                    </div>
+                    <span class="concept-badge" style="color: var(--accent-emerald);">Quality Assurance</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Architectural Role</span>
+                    <p class="field-value">Continuous test-driven validation enforcing total record conservation, coordinate validity bounds, and sub-meter distance invariants.</p>
+                </div>
+                <div class="impl-box">
+                    <span class="field-label">Where & How Implemented</span>
+                    <span class="code-tag">tests/test_floodwatch_verification.py</span>
+                    <span class="formula">Invariant: N_clean (18) + N_quarantine (2) == N_raw (20)</span>
+                </div>
+            </div>
+
+            <!-- 7. Geospatial Visualization -->
+            <div class="stage-box">
+                <div class="stage-header">
+                    <div class="stage-title">
+                        <div class="stage-number">07</div>
+                        <div>Geospatial Situation Map</div>
+                    </div>
+                    <span class="concept-badge">Operational Delivery</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Architectural Role</span>
+                    <p class="field-value">Renders interactive GIS crisis command canvas displaying sensor inundation depth, cluster hulls, and infrastructure proximity buffers.</p>
+                </div>
+                <div class="impl-box">
+                    <span class="field-label">Where & How Implemented</span>
+                    <span class="code-tag">visualizer.py ➔ output/floodwatch_dashboard.html</span>
+                    <span class="formula">Esri Dark Gray GIS Canvas • Leaflet Engine</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
