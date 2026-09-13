@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloodWatch AI | Urban Inundation & Asset Risk Command Center</title>
+    <!-- Google Fonts & Leaflet CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        :root {
+            --bg-base: #0a0f1d;
+            --bg-card: #111a2e;
+            --border: #1e2c4a;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --accent-emerald: #10b981;
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: var(--bg-base);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        header {
+            background: rgba(17, 26, 46, 0.95);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+        }
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #06b6d4, #2563eb);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+        }
+        .brand-title h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .brand-title h1 span.badge {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .brand-title p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: var(--accent-emerald);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+        .metrics-strip {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            padding: 12px 24px;
+            background: #0d1424;
+            border-bottom: 1px solid var(--border);
+        }
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+        }
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+        .metric-val {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 4px;
+            color: #fff;
+        }
+        .app-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            overflow: hidden;
+            position: relative;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #0a0f1d;
+        }
+        .sidebar {
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar-header h2 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #fff;
+        }
+        .feed-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sensor-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .sensor-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-1px);
+        }
+        .sensor-card.surge {
+            border-left: 3px solid var(--accent-red);
+        }
+        .sensor-card.healed {
+            border-left: 3px solid var(--accent-emerald);
+        }
+        .sensor-card.quarantine {
+            border-left: 3px solid var(--accent-amber);
+            opacity: 0.8;
+        }
+        .sc-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .sc-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-top: 4px;
+        }
+        .sc-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .leaflet-popup-content-wrapper {
+            background: #0f172a !important;
+            color: #f8fafc !important;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .leaflet-popup-tip {
+            background: #0f172a !important;
+        }
+        .popup-title {
+            font-weight: 700;
+            font-size: 13px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            color: #38bdf8;
+        }
+        .popup-row {
+            font-size: 11px;
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-container">
+            <div class="brand-logo">🌊</div>
+            <div class="brand-title">
+                <h1>FloodWatch AI <span class="badge">Google Flood Hub Architecture</span></h1>
+                <p>Autonomous Urban Inundation & Asset Risk Intelligence · Candidate: <b>Vartika Verma</b></p>
+            </div>
+        </div>
+        <div class="status-pill">
+            <div class="status-dot"></div>
+            AUTONOMOUS REACT LOOP ACTIVE
+        </div>
+    </header>
+
+    <div class="metrics-strip">
+        <div class="metric-card">
+            <span class="metric-label">Ingested Telemetry</span>
+            <span class="metric-val">20 Streams</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">Self-Healed Coordinates</span>
+            <span class="metric-val" style="color: var(--accent-emerald);">4 Inversions</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">Quarantined Sensor Drops</span>
+            <span class="metric-val" style="color: var(--accent-amber);">2 Null Island</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">Critical Surges (P1)</span>
+            <span class="metric-val" style="color: var(--accent-red);">3 Assets Threat</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">Inundation Corridors</span>
+            <span class="metric-val" style="color: var(--accent-cyan);">3 DBSCAN Clust</span>
+        </div>
+    </div>
+
+    <div class="app-body">
+        <div id="map"></div>
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Real-Time Triage Stream</h2>
+                <span style="font-size: 11px; color: var(--text-muted);">18 Active</span>
+            </div>
+            <div class="feed-container">
+    
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2001</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Culvert Sensor</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>142.5 cm</b></span>
+                        <span>Rate: <b>28.4 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: St Thomas Hospital Acute Trauma Center</span>
+                        <span><b>505.1m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2002</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Storm Drain Gauge</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>128.0 cm</b></span>
+                        <span>Rate: <b>22.1 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: St Thomas Hospital Acute Trauma Center</span>
+                        <span><b>601.4m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card healed">
+                    <div class="sc-top">
+                        <span>FL-2003</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Basement Sump Telemetry · <span style='color: #10b981;'>[HEALED INVERSION]</span></div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>155.0 cm</b></span>
+                        <span>Rate: <b>34.0 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: St Thomas Hospital Acute Trauma Center</span>
+                        <span><b>477.3m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2004</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Quay Level Sensor</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>110.4 cm</b></span>
+                        <span>Rate: <b>18.5 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: London Bridge Underground Complex</span>
+                        <span><b>99.9m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2005</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">River Flow Monitor</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>98.2 cm</b></span>
+                        <span>Rate: <b>14.2 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: London Bridge Underground Complex</span>
+                        <span><b>211.8m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card surge">
+                    <div class="sc-top">
+                        <span>FL-2007</span>
+                        <span><span style='color: #ef4444; font-weight: 700;'>P1 CRITICAL</span></span>
+                    </div>
+                    <div class="sc-title">Canal Overflow Weir</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>135.8 cm</b></span>
+                        <span>Rate: <b>26.0 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>149.2m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2008</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Rail Underpass Sensor</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>119.5 cm</b></span>
+                        <span>Rate: <b>19.8 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>91.3m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card surge">
+                    <div class="sc-top">
+                        <span>FL-2009</span>
+                        <span><span style='color: #ef4444; font-weight: 700;'>P1 CRITICAL</span></span>
+                    </div>
+                    <div class="sc-title">Subway Vent Inflow · <span style='color: #10b981;'>[HEALED INVERSION]</span></div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>148.2 cm</b></span>
+                        <span>Rate: <b>31.5 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>260.0m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2010</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Road Gully Monitor</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>88.4 cm</b></span>
+                        <span>Rate: <b>11.0 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>664.5m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2012</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Basement Drainage Sensor</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>104.0 cm</b></span>
+                        <span>Rate: <b>16.5 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>490.5m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card healed">
+                    <div class="sc-top">
+                        <span>FL-2013</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Utility Trench Gauge · <span style='color: #10b981;'>[HEALED INVERSION]</span></div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>122.0 cm</b></span>
+                        <span>Rate: <b>21.0 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>786.4m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2014</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Park Retention Basin</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>78.5 cm</b></span>
+                        <span>Rate: <b>8.2 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>3904.4m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2015</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Street Runoff Monitor</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>82.0 cm</b></span>
+                        <span>Rate: <b>9.1 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>3954.5m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2016</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Docklands Pumping Sump</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>115.0 cm</b></span>
+                        <span>Rate: <b>17.9 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: London Bridge Underground Complex</span>
+                        <span><b>310.5m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card surge">
+                    <div class="sc-top">
+                        <span>FL-2017</span>
+                        <span><span style='color: #ef4444; font-weight: 700;'>P1 CRITICAL</span></span>
+                    </div>
+                    <div class="sc-title">Mainline Track Sump</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>140.0 cm</b></span>
+                        <span>Rate: <b>29.0 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: King's Cross International Terminal & Subways</span>
+                        <span><b>88.1m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card healed">
+                    <div class="sc-top">
+                        <span>FL-2018</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Bridge Abutment Sensor · <span style='color: #10b981;'>[HEALED INVERSION]</span></div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>131.0 cm</b></span>
+                        <span>Rate: <b>23.5 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: St Thomas Hospital Acute Trauma Center</span>
+                        <span><b>697.2m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2019</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Depot Drainage Pit</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>112.0 cm</b></span>
+                        <span>Rate: <b>15.8 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: St Thomas Hospital Acute Trauma Center</span>
+                        <span><b>395.7m</b></span>
+                    </div>
+                </div>
+        
+                <div class="sensor-card ">
+                    <div class="sc-top">
+                        <span>FL-2020</span>
+                        <span><span style='color: #38bdf8;'>P2 HIGH</span></span>
+                    </div>
+                    <div class="sc-title">Pier Outfall Gauge</div>
+                    <div class="sc-meta">
+                        <span>Depth: <b>102.5 cm</b></span>
+                        <span>Rate: <b>13.4 cm/h</b></span>
+                    </div>
+                    <div class="sc-meta" style="margin-top: 4px; font-size: 10px;">
+                        <span>Near: London Bridge Underground Complex</span>
+                        <span><b>335.4m</b></span>
+                    </div>
+                </div>
+        
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const map = L.map('map', {
+            center: [51.513, -0.115],
+            zoom: 13,
+            zoomControl: true
+        });
+
+        // CartoDB Dark Matter tile layer
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri, DeLorme, NAVTEQ | FloodWatch AI',
+            maxZoom: 19
+        }).addTo(map);
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 16
+        }).addTo(map);
+
+        // Assets Data
+        const assets = [{"asset_id": "AST-01", "asset_name": "St Thomas Hospital Acute Trauma Center", "category": "Healthcare", "latitude": "51.4988", "longitude": "-0.1185", "criticality_tier": "TIER_1_CRITICAL", "max_tolerable_inundation_cm": "15.0"}, {"asset_id": "AST-02", "asset_name": "Bankside 132kV Main Grid Substation", "category": "Energy & Power", "latitude": "51.5070", "longitude": "-0.0990", "criticality_tier": "TIER_1_CRITICAL", "max_tolerable_inundation_cm": "20.0"}, {"asset_id": "AST-03", "asset_name": "London Bridge Underground Complex", "category": "Transport Interchange", "latitude": "51.5050", "longitude": "-0.0860", "criticality_tier": "TIER_1_CRITICAL", "max_tolerable_inundation_cm": "25.0"}, {"asset_id": "AST-04", "asset_name": "King's Cross International Terminal & Subways", "category": "Transport Interchange", "latitude": "51.5314", "longitude": "-0.1261", "criticality_tier": "TIER_1_CRITICAL", "max_tolerable_inundation_cm": "25.0"}, {"asset_id": "AST-05", "asset_name": "Thames Beckton Clean Water Intake Pumping Station", "category": "Water & Sanitation", "latitude": "51.5120", "longitude": "-0.0750", "criticality_tier": "TIER_2_HIGH", "max_tolerable_inundation_cm": "30.0"}];
+        const curated = [{"sensor_id": "FL-2001", "timestamp": "2026-09-06T08:15:00Z", "latitude": "51.5033", "longitude": "-0.1195", "water_depth_cm": "142.5", "rate_of_rise_cm_hr": "28.4", "flow_velocity_mps": "1.8", "sensor_type": "Culvert Sensor", "reported_severity": "CRITICAL_SURGE", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-01", "nearest_asset_name": "St Thomas Hospital Acute Trauma Center", "nearest_asset_category": "Healthcare", "geodesic_distance_meters": "505.1", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "1"}, {"sensor_id": "FL-2002", "timestamp": "2026-09-06T08:16:30Z", "latitude": "51.5042", "longitude": "-0.118", "water_depth_cm": "128.0", "rate_of_rise_cm_hr": "22.1", "flow_velocity_mps": "1.5", "sensor_type": "Storm Drain Gauge", "reported_severity": "HIGH_RISK", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-01", "nearest_asset_name": "St Thomas Hospital Acute Trauma Center", "nearest_asset_category": "Healthcare", "geodesic_distance_meters": "601.4", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "1"}, {"sensor_id": "FL-2003", "timestamp": "2026-09-06T08:18:12Z", "latitude": "51.5028", "longitude": "-0.121", "water_depth_cm": "155.0", "rate_of_rise_cm_hr": "34.0", "flow_velocity_mps": "2.1", "sensor_type": "Basement Sump Telemetry", "reported_severity": "CRITICAL_SURGE", "data_lineage": "HEALED_INVERTED_COORDINATES", "nearest_asset_id": "AST-01", "nearest_asset_name": "St Thomas Hospital Acute Trauma Center", "nearest_asset_category": "Healthcare", "geodesic_distance_meters": "477.3", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "1"}, {"sensor_id": "FL-2004", "timestamp": "2026-09-06T08:19:45Z", "latitude": "51.5055", "longitude": "-0.0872", "water_depth_cm": "110.4", "rate_of_rise_cm_hr": "18.5", "flow_velocity_mps": "1.2", "sensor_type": "Quay Level Sensor", "reported_severity": "HIGH_RISK", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-03", "nearest_asset_name": "London Bridge Underground Complex", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "99.9", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "2"}, {"sensor_id": "FL-2005", "timestamp": "2026-09-06T08:21:00Z", "latitude": "51.5068", "longitude": "-0.085", "water_depth_cm": "98.2", "rate_of_rise_cm_hr": "14.2", "flow_velocity_mps": "0.9", "sensor_type": "River Flow Monitor", "reported_severity": "MODERATE", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-03", "nearest_asset_name": "London Bridge Underground Complex", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "211.8", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "2"}, {"sensor_id": "FL-2007", "timestamp": "2026-09-06T08:23:40Z", "latitude": "51.5305", "longitude": "-0.1245", "water_depth_cm": "135.8", "rate_of_rise_cm_hr": "26.0", "flow_velocity_mps": "1.7", "sensor_type": "Canal Overflow Weir", "reported_severity": "CRITICAL_SURGE", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "149.2", "triage_priority": "P1_CRITICAL_SURGE", "cluster_id": "3"}, {"sensor_id": "FL-2008", "timestamp": "2026-09-06T08:25:10Z", "latitude": "51.532", "longitude": "-0.127", "water_depth_cm": "119.5", "rate_of_rise_cm_hr": "19.8", "flow_velocity_mps": "1.3", "sensor_type": "Rail Underpass Sensor", "reported_severity": "HIGH_RISK", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "91.3", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "3"}, {"sensor_id": "FL-2009", "timestamp": "2026-09-06T08:26:35Z", "latitude": "51.5332", "longitude": "-0.1285", "water_depth_cm": "148.2", "rate_of_rise_cm_hr": "31.5", "flow_velocity_mps": "1.9", "sensor_type": "Subway Vent Inflow", "reported_severity": "CRITICAL_SURGE", "data_lineage": "HEALED_INVERTED_COORDINATES", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "260.0", "triage_priority": "P1_CRITICAL_SURGE", "cluster_id": "3"}, {"sensor_id": "FL-2010", "timestamp": "2026-09-06T08:28:00Z", "latitude": "51.528", "longitude": "-0.134", "water_depth_cm": "88.4", "rate_of_rise_cm_hr": "11.0", "flow_velocity_mps": "0.7", "sensor_type": "Road Gully Monitor", "reported_severity": "MODERATE", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "664.5", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "3"}, {"sensor_id": "FL-2012", "timestamp": "2026-09-06T08:31:05Z", "latitude": "51.5295", "longitude": "-0.1325", "water_depth_cm": "104.0", "rate_of_rise_cm_hr": "16.5", "flow_velocity_mps": "1.1", "sensor_type": "Basement Drainage Sensor", "reported_severity": "HIGH_RISK", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "490.5", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "3"}, {"sensor_id": "FL-2013", "timestamp": "2026-09-06T08:32:45Z", "latitude": "51.527", "longitude": "-0.135", "water_depth_cm": "122.0", "rate_of_rise_cm_hr": "21.0", "flow_velocity_mps": "1.4", "sensor_type": "Utility Trench Gauge", "reported_severity": "HIGH_RISK", "data_lineage": "HEALED_INVERTED_COORDINATES", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "786.4", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "3"}, {"sensor_id": "FL-2014", "timestamp": "2026-09-06T08:34:10Z", "latitude": "51.515", "longitude": "-0.176", "water_depth_cm": "78.5", "rate_of_rise_cm_hr": "8.2", "flow_velocity_mps": "0.5", "sensor_type": "Park Retention Basin", "reported_severity": "LOW_RISK", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "3904.4", "triage_priority": "P3_MONITORING", "cluster_id": "-1"}, {"sensor_id": "FL-2015", "timestamp": "2026-09-06T08:35:30Z", "latitude": "51.5165", "longitude": "-0.178", "water_depth_cm": "82.0", "rate_of_rise_cm_hr": "9.1", "flow_velocity_mps": "0.6", "sensor_type": "Street Runoff Monitor", "reported_severity": "LOW_RISK", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "3954.5", "triage_priority": "P3_MONITORING", "cluster_id": "-1"}, {"sensor_id": "FL-2016", "timestamp": "2026-09-06T08:37:00Z", "latitude": "51.5075", "longitude": "-0.088", "water_depth_cm": "115.0", "rate_of_rise_cm_hr": "17.9", "flow_velocity_mps": "1.2", "sensor_type": "Docklands Pumping Sump", "reported_severity": "HIGH_RISK", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-03", "nearest_asset_name": "London Bridge Underground Complex", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "310.5", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "2"}, {"sensor_id": "FL-2017", "timestamp": "2026-09-06T08:38:25Z", "latitude": "51.531", "longitude": "-0.125", "water_depth_cm": "140.0", "rate_of_rise_cm_hr": "29.0", "flow_velocity_mps": "1.8", "sensor_type": "Mainline Track Sump", "reported_severity": "CRITICAL_SURGE", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-04", "nearest_asset_name": "King's Cross International Terminal & Subways", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "88.1", "triage_priority": "P1_CRITICAL_SURGE", "cluster_id": "3"}, {"sensor_id": "FL-2018", "timestamp": "2026-09-06T08:39:50Z", "latitude": "51.505", "longitude": "-0.117", "water_depth_cm": "131.0", "rate_of_rise_cm_hr": "23.5", "flow_velocity_mps": "1.6", "sensor_type": "Bridge Abutment Sensor", "reported_severity": "CRITICAL_SURGE", "data_lineage": "HEALED_INVERTED_COORDINATES", "nearest_asset_id": "AST-01", "nearest_asset_name": "St Thomas Hospital Acute Trauma Center", "nearest_asset_category": "Healthcare", "geodesic_distance_meters": "697.2", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "1"}, {"sensor_id": "FL-2019", "timestamp": "2026-09-06T08:41:15Z", "latitude": "51.502", "longitude": "-0.121", "water_depth_cm": "112.0", "rate_of_rise_cm_hr": "15.8", "flow_velocity_mps": "1.0", "sensor_type": "Depot Drainage Pit", "reported_severity": "HIGH_RISK", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-01", "nearest_asset_name": "St Thomas Hospital Acute Trauma Center", "nearest_asset_category": "Healthcare", "geodesic_distance_meters": "395.7", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "1"}, {"sensor_id": "FL-2020", "timestamp": "2026-09-06T08:42:30Z", "latitude": "51.508", "longitude": "-0.0865", "water_depth_cm": "102.5", "rate_of_rise_cm_hr": "13.4", "flow_velocity_mps": "0.8", "sensor_type": "Pier Outfall Gauge", "reported_severity": "MODERATE", "data_lineage": "NATIVE_VERIFIED_VALID", "nearest_asset_id": "AST-03", "nearest_asset_name": "London Bridge Underground Complex", "nearest_asset_category": "Transport Interchange", "geodesic_distance_meters": "335.4", "triage_priority": "P2_ELEVATED_RISK", "cluster_id": "2"}];
+        const clusterData = {"total_clusters": 3, "clusters": {"CORRIDOR-1": {"cluster_id": 1, "incident_count": 5, "total_water_depth_cm": 668.5, "max_rate_of_rise": 34.0, "critical_surge_count": 3, "centroid_lat": 51.50346, "centroid_lon": -0.1193, "avg_water_depth_cm": 133.7}, "CORRIDOR-2": {"cluster_id": 2, "incident_count": 4, "total_water_depth_cm": 426.1, "max_rate_of_rise": 18.5, "critical_surge_count": 0, "centroid_lat": 51.50695, "centroid_lon": -0.086675, "avg_water_depth_cm": 106.5}, "CORRIDOR-3": {"cluster_id": 3, "incident_count": 7, "total_water_depth_cm": 857.9, "max_rate_of_rise": 31.5, "critical_surge_count": 3, "centroid_lat": 51.530171, "centroid_lon": -0.1295, "avg_water_depth_cm": 122.6}}};
+
+        // Add Critical Infrastructure Markers
+        assets.forEach(a => {
+            const marker = L.circleMarker([a.latitude, a.longitude], {
+                radius: 10,
+                fillColor: '#ef4444',
+                color: '#ffffff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <div class="popup-title">🏛️ ${a.asset_name}</div>
+                <div class="popup-row"><span>Category:</span><b>${a.category}</b></div>
+                <div class="popup-row"><span>Criticality:</span><b>${a.criticality_tier}</b></div>
+                <div class="popup-row"><span>Max Flood Tol:</span><b>${a.max_tolerable_inundation_cm} cm</b></div>
+            `);
+
+            // Add 400m emergency buffer circle
+            L.circle([a.latitude, a.longitude], {
+                radius: 400,
+                color: '#ef4444',
+                weight: 1,
+                dashArray: '4, 4',
+                fillColor: '#ef4444',
+                fillOpacity: 0.05
+            }).addTo(map);
+        });
+
+        // Add Sensor Inundation Points
+        curated.forEach(s => {
+            const isHealed = s.data_lineage === "HEALED_INVERTED_COORDINATES";
+            const isCritical = s.triage_priority.includes("P1_CRITICAL");
+            const color = isCritical ? '#ef4444' : (isHealed ? '#10b981' : '#06b6d4');
+
+            const marker = L.circleMarker([s.latitude, s.longitude], {
+                radius: isCritical ? 8 : 6,
+                fillColor: color,
+                color: '#ffffff',
+                weight: 1.5,
+                opacity: 1,
+                fillOpacity: 0.85
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <div class="popup-title">🌊 Sensor ${s.sensor_id}</div>
+                <div class="popup-row"><span>Status:</span><b>${s.reported_severity}</b></div>
+                <div class="popup-row"><span>Water Depth:</span><b>${s.water_depth_cm} cm</b></div>
+                <div class="popup-row"><span>Rate of Rise:</span><b>${s.rate_of_rise_cm_hr} cm/hr</b></div>
+                <div class="popup-row"><span>Nearest Asset:</span><b>${s.nearest_asset_name}</b></div>
+                <div class="popup-row"><span>Geodesic Distance:</span><b>${s.geodesic_distance_meters} m</b></div>
+                <div class="popup-row"><span>Lineage:</span><b>${s.data_lineage}</b></div>
+            `);
+        });
+
+        // Add DBSCAN Corridors
+        for (const [cid, cinfo] of Object.entries(clusterData.clusters)) {
+            L.circle([cinfo.centroid_lat, cinfo.centroid_lon], {
+                radius: 650,
+                color: '#06b6d4',
+                weight: 1.5,
+                dashArray: '6, 6',
+                fillColor: '#06b6d4',
+                fillOpacity: 0.12
+            }).addTo(map).bindPopup(`
+                <div class="popup-title">⚡ Inundation Corridor ${cid}</div>
+                <div class="popup-row"><span>Sensors Clustered:</span><b>${cinfo.incident_count}</b></div>
+                <div class="popup-row"><span>Avg Water Depth:</span><b>${cinfo.avg_water_depth_cm} cm</b></div>
+                <div class="popup-row"><span>Peak Rise Rate:</span><b>${cinfo.max_rate_of_rise} cm/hr</b></div>
+            `);
+        }
+    </script>
+</body>
+</html>

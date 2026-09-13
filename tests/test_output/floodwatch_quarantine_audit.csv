@@ -1,0 +1,3 @@
+sensor_id,timestamp,raw_latitude,raw_longitude,quarantine_reason,action_required,sensor_type
+FL-2006,2026-09-06T08:22:15Z,0.0,0.0,HARDWARE_ACQUISITION_TIMEOUT_NULL_ISLAND,DISPATCH_FIELD_TECHNICIAN_REBOOT,Emergency Mobile Beacon
+FL-2011,2026-09-06T08:29:20Z,0.0,0.0,HARDWARE_ACQUISITION_TIMEOUT_NULL_ISLAND,DISPATCH_FIELD_TECHNICIAN_REBOOT,Substation Perimeter Telemetry

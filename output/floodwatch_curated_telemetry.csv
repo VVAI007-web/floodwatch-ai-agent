@@ -1,0 +1,19 @@
+sensor_id,timestamp,latitude,longitude,water_depth_cm,rate_of_rise_cm_hr,flow_velocity_mps,sensor_type,reported_severity,data_lineage,nearest_asset_id,nearest_asset_name,nearest_asset_category,geodesic_distance_meters,triage_priority,cluster_id
+FL-2001,2026-09-06T08:15:00Z,51.5033,-0.1195,142.5,28.4,1.8,Culvert Sensor,CRITICAL_SURGE,NATIVE_VERIFIED_VALID,AST-01,St Thomas Hospital Acute Trauma Center,Healthcare,505.1,P2_ELEVATED_RISK,1
+FL-2002,2026-09-06T08:16:30Z,51.5042,-0.118,128.0,22.1,1.5,Storm Drain Gauge,HIGH_RISK,NATIVE_VERIFIED_VALID,AST-01,St Thomas Hospital Acute Trauma Center,Healthcare,601.4,P2_ELEVATED_RISK,1
+FL-2003,2026-09-06T08:18:12Z,51.5028,-0.121,155.0,34.0,2.1,Basement Sump Telemetry,CRITICAL_SURGE,HEALED_INVERTED_COORDINATES,AST-01,St Thomas Hospital Acute Trauma Center,Healthcare,477.3,P2_ELEVATED_RISK,1
+FL-2004,2026-09-06T08:19:45Z,51.5055,-0.0872,110.4,18.5,1.2,Quay Level Sensor,HIGH_RISK,NATIVE_VERIFIED_VALID,AST-03,London Bridge Underground Complex,Transport Interchange,99.9,P2_ELEVATED_RISK,2
+FL-2005,2026-09-06T08:21:00Z,51.5068,-0.085,98.2,14.2,0.9,River Flow Monitor,MODERATE,NATIVE_VERIFIED_VALID,AST-03,London Bridge Underground Complex,Transport Interchange,211.8,P2_ELEVATED_RISK,2
+FL-2007,2026-09-06T08:23:40Z,51.5305,-0.1245,135.8,26.0,1.7,Canal Overflow Weir,CRITICAL_SURGE,NATIVE_VERIFIED_VALID,AST-04,King's Cross International Terminal & Subways,Transport Interchange,149.2,P1_CRITICAL_SURGE,3
+FL-2008,2026-09-06T08:25:10Z,51.532,-0.127,119.5,19.8,1.3,Rail Underpass Sensor,HIGH_RISK,NATIVE_VERIFIED_VALID,AST-04,King's Cross International Terminal & Subways,Transport Interchange,91.3,P2_ELEVATED_RISK,3
+FL-2009,2026-09-06T08:26:35Z,51.5332,-0.1285,148.2,31.5,1.9,Subway Vent Inflow,CRITICAL_SURGE,HEALED_INVERTED_COORDINATES,AST-04,King's Cross International Terminal & Subways,Transport Interchange,260.0,P1_CRITICAL_SURGE,3
+FL-2010,2026-09-06T08:28:00Z,51.528,-0.134,88.4,11.0,0.7,Road Gully Monitor,MODERATE,NATIVE_VERIFIED_VALID,AST-04,King's Cross International Terminal & Subways,Transport Interchange,664.5,P2_ELEVATED_RISK,3
+FL-2012,2026-09-06T08:31:05Z,51.5295,-0.1325,104.0,16.5,1.1,Basement Drainage Sensor,HIGH_RISK,NATIVE_VERIFIED_VALID,AST-04,King's Cross International Terminal & Subways,Transport Interchange,490.5,P2_ELEVATED_RISK,3
+FL-2013,2026-09-06T08:32:45Z,51.527,-0.135,122.0,21.0,1.4,Utility Trench Gauge,HIGH_RISK,HEALED_INVERTED_COORDINATES,AST-04,King's Cross International Terminal & Subways,Transport Interchange,786.4,P2_ELEVATED_RISK,3
+FL-2014,2026-09-06T08:34:10Z,51.515,-0.176,78.5,8.2,0.5,Park Retention Basin,LOW_RISK,NATIVE_VERIFIED_VALID,AST-04,King's Cross International Terminal & Subways,Transport Interchange,3904.4,P3_MONITORING,-1
+FL-2015,2026-09-06T08:35:30Z,51.5165,-0.178,82.0,9.1,0.6,Street Runoff Monitor,LOW_RISK,NATIVE_VERIFIED_VALID,AST-04,King's Cross International Terminal & Subways,Transport Interchange,3954.5,P3_MONITORING,-1
+FL-2016,2026-09-06T08:37:00Z,51.5075,-0.088,115.0,17.9,1.2,Docklands Pumping Sump,HIGH_RISK,NATIVE_VERIFIED_VALID,AST-03,London Bridge Underground Complex,Transport Interchange,310.5,P2_ELEVATED_RISK,2
+FL-2017,2026-09-06T08:38:25Z,51.531,-0.125,140.0,29.0,1.8,Mainline Track Sump,CRITICAL_SURGE,NATIVE_VERIFIED_VALID,AST-04,King's Cross International Terminal & Subways,Transport Interchange,88.1,P1_CRITICAL_SURGE,3
+FL-2018,2026-09-06T08:39:50Z,51.505,-0.117,131.0,23.5,1.6,Bridge Abutment Sensor,CRITICAL_SURGE,HEALED_INVERTED_COORDINATES,AST-01,St Thomas Hospital Acute Trauma Center,Healthcare,697.2,P2_ELEVATED_RISK,1
+FL-2019,2026-09-06T08:41:15Z,51.502,-0.121,112.0,15.8,1.0,Depot Drainage Pit,HIGH_RISK,NATIVE_VERIFIED_VALID,AST-01,St Thomas Hospital Acute Trauma Center,Healthcare,395.7,P2_ELEVATED_RISK,1
+FL-2020,2026-09-06T08:42:30Z,51.508,-0.0865,102.5,13.4,0.8,Pier Outfall Gauge,MODERATE,NATIVE_VERIFIED_VALID,AST-03,London Bridge Underground Complex,Transport Interchange,335.4,P2_ELEVATED_RISK,2

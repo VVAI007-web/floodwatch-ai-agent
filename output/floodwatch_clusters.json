@@ -1,0 +1,35 @@
+{
+  "total_clusters": 3,
+  "clusters": {
+    "CORRIDOR-1": {
+      "cluster_id": 1,
+      "incident_count": 5,
+      "total_water_depth_cm": 668.5,
+      "max_rate_of_rise": 34.0,
+      "critical_surge_count": 3,
+      "centroid_lat": 51.50346,
+      "centroid_lon": -0.1193,
+      "avg_water_depth_cm": 133.7
+    },
+    "CORRIDOR-2": {
+      "cluster_id": 2,
+      "incident_count": 4,
+      "total_water_depth_cm": 426.1,
+      "max_rate_of_rise": 18.5,
+      "critical_surge_count": 0,
+      "centroid_lat": 51.50695,
+      "centroid_lon": -0.086675,
+      "avg_water_depth_cm": 106.5
+    },
+    "CORRIDOR-3": {
+      "cluster_id": 3,
+      "incident_count": 7,
+      "total_water_depth_cm": 857.9,
+      "max_rate_of_rise": 31.5,
+      "critical_surge_count": 3,
+      "centroid_lat": 51.530171,
+      "centroid_lon": -0.1295,
+      "avg_water_depth_cm": 122.6
+    }
+  }
+}
