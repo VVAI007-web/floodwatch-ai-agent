@@ -1,0 +1,6 @@
+asset_id,asset_name,category,latitude,longitude,criticality_tier,max_tolerable_inundation_cm
+AST-01,St Thomas Hospital Acute Trauma Center,Healthcare,51.4988,-0.1185,TIER_1_CRITICAL,15.0
+AST-02,Bankside 132kV Main Grid Substation,Energy & Power,51.5070,-0.0990,TIER_1_CRITICAL,20.0
+AST-03,London Bridge Underground Complex,Transport Interchange,51.5050,-0.0860,TIER_1_CRITICAL,25.0
+AST-04,King's Cross International Terminal & Subways,Transport Interchange,51.5314,-0.1261,TIER_1_CRITICAL,25.0
+AST-05,Thames Beckton Clean Water Intake Pumping Station,Water & Sanitation,51.5120,-0.0750,TIER_2_HIGH,30.0
