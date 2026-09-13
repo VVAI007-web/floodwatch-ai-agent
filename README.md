@@ -70,4 +70,4 @@ python -m pytest floodwatch/tests/test_floodwatch_verification.py -v
 ```bash
 python floodwatch/visualizer.py
 ```
-- Generates `floodwatch/output/floodwatch_dashboard.html` using clean Esri Dark Gray GIS canvas with zero watermarks.
+- Generates `floodwatch/output/floodwatch_dashboard.html` using clean Esri Dark Gray GIS canvas.
