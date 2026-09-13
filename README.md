@@ -6,47 +6,45 @@
 
 ---
 
-## Core Technical Concepts & System Implementation
+## Core Technical Concepts & System Architecture
 
-| Concept | Architectural Role | Where & How Implemented |
-| :--- | :--- | :--- |
-| **Unsupervised Spatial Clustering (DBSCAN)** | Density-based corridor & anomaly discovery without pre-classified boundary zones | **`agent.py` (`cluster_inundation_zones`)**<br>Executes density-based spatial clustering with $\varepsilon = 650\,\text{m}$ and $\text{min\_samples} = 3$ to detect emergent urban flood corridors from noisy telemetry without requiring static polygon boundaries. |
-| **Deterministic Geodesic Grounding** | Elimination of LLM spatial hallucinations via rigorous spherical mathematics | **`agent.py` (`haversine_distance`) & `tests/test_floodwatch_verification.py`**<br>Employs spherical Haversine trigonometry ($R = 6,371\,\text{km}$) rather than planar Euclidean approximations, guaranteeing sub-meter proximity calculations between flood clusters and critical infrastructure assets. |
-| **Constraint-Driven Prompt Architecture** | Deterministic schema boundaries, negative constraints, and output validation | **`agent.py` (System Prompt & Schema Enforcers)**<br>Embeds explicit negative constraints (*"Do NOT silently drop malformed data"*) and structured delegation contracts, ensuring robust handling of coordinate formats and schema compliance. |
-| **Autonomous ReAct Feedback Loops** | Dynamic Observe ➔ Reason ➔ Act ➔ Adjust execution cycle | **`agent.py` (`run_autonomous_pipeline`)**<br>Autonomously audits raw telemetry feeds, identifies inverted coordinate pairs `[Lon, Lat]`, self-heals spatial orientation against geographic bounds, and pivots execution strategies dynamically without human intervention. |
-| **Human-in-the-Loop (HITL) Exception Quarantine** | Safety gating for unrecoverable hardware dropouts | **`agent.py` (`quarantine_unrecoverable_records`) ➔ `output/floodwatch_quarantine_audit.csv`**<br>Isolates fatal telemetry failures (such as `(0.0, 0.0)` Null Island sensor dropouts) into a quarantined audit queue for specialist review, maintaining 100% total record conservation. |
-| **Automated Invariant Verification** | Independent automated test-driven validation | **`tests/test_floodwatch_verification.py` (Pytest Suite)**<br>Executes 5 automated verification tests enforcing boundary invariants, quarantine-exclusivity, full record conservation ($N_{\text{clean}} + N_{\text{quarantined}} = N_{\text{raw}}$), and Haversine sub-meter ground truth. |
-| **Interactive Geospatial Intelligence** | Situation map rendering and proximity visualization | **`visualizer.py` ➔ `output/floodwatch_dashboard.html`**<br>Generates an interactive GIS command dashboard using Leaflet and Esri Dark Canvas, plotting sensor clusters, severity markers, and infrastructure risk buffers. |
+```mermaid
+flowchart TD
+    %% Architecture Styling
+    classDef inputStyle fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef reactStyle fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
+    classDef safetyStyle fill:#450a0a,stroke:#f43f5e,stroke-width:2px,color:#fecdd3;
+    classDef mathStyle fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5;
+    classDef mlStyle fill:#0c4a6e,stroke:#0284c7,stroke-width:2px,color:#e0f2fe;
+    classDef verifyStyle fill:#14532d,stroke:#22c55e,stroke-width:2px,color:#f0fdf4;
+    classDef mapStyle fill:#312e81,stroke:#a855f7,stroke-width:2px,color:#faf5ff;
 
----
+    subgraph SEC1["1. INGESTION & BOUNDARY DEFINITION"]
+        C1["<b>Constraint-Driven Prompt Architecture</b><br/>• <i>Role:</i> Deterministic schema boundaries and negative constraints<br/>• <i>Where:</i> agent.py (System Prompt and Schema Enforcers)"]:::inputStyle
+    end
 
-## System Pipeline & Execution Flow
+    subgraph SEC2["2. AUTONOMOUS REASONING & HITL SAFETY"]
+        C2["<b>Autonomous ReAct Feedback Loops</b><br/>• <i>Role:</i> Dynamic Observe ➔ Reason ➔ Act ➔ Adjust execution cycle<br/>• <i>Where:</i> agent.py (run_autonomous_pipeline)"]:::reactStyle
+        C3["<b>Human-in-the-Loop Exception Quarantine</b><br/>• <i>Role:</i> Gating for unrecoverable sensor dropouts (0,0)<br/>• <i>Where:</i> agent.py (quarantine_unrecoverable_records) ➔ audit CSV"]:::safetyStyle
+    end
 
-```
-[Raw Sensor Telemetry]
-        │
-        ▼
-[Autonomous Agent Audit] ──(Observe: Out-of-bounds or Null Coordinates)
-        │
-        ├── Inverted [Lon, Lat] ──────────► [Self-Healing Geodesic Transform]
-        │                                             │
-        └── Fatal (0,0) Dropout ──► [HITL Quarantine] │
-                                          │           │
-                                          ▼           ▼
-                                     [Quarantine] [Cleaned Telemetry]
-                                       Audit CSV      │
-                                                      ▼
-                                            [DBSCAN Clustering]
-                                             (eps=650m, min=3)
-                                                      │
-                                                      ▼
-                                            [Risk Corridor Analysis]
-                                            (Asset Proximity Engine)
-                                                      │
-                                    ┌─────────────────┴─────────────────┐
-                                    ▼                                   ▼
-                         [Interactive Dashboard]           [Pytest Invariant Suite]
-                          (Esri Dark GIS Canvas)            (5 Automated Tests Passed)
+    subgraph SEC3["3. MATHEMATICAL GROUNDING & SPATIAL ML"]
+        C4["<b>Deterministic Geodesic Grounding</b><br/>• <i>Role:</i> Eliminates spatial hallucinations via spherical trigonometry<br/>• <i>Where:</i> agent.py (haversine_distance)"]:::mathStyle
+        C5["<b>Unsupervised Spatial Clustering (DBSCAN)</b><br/>• <i>Role:</i> Density hazard corridor discovery (eps=650m, min_samples=3)<br/>• <i>Where:</i> agent.py (cluster_inundation_zones)"]:::mlStyle
+    end
+
+    subgraph SEC4["4. INVARIANT TESTING & SITUATION DISPLAY"]
+        C6["<b>Automated Invariant Verification</b><br/>• <i>Role:</i> 5 independent automated unit tests (Bounds, Invariants, Precision)<br/>• <i>Where:</i> tests/test_floodwatch_verification.py"]:::verifyStyle
+        C7["<b>Interactive Geospatial Intelligence</b><br/>• <i>Role:</i> Multi-layer situation map and asset proximity buffers<br/>• <i>Where:</i> visualizer.py ➔ output/floodwatch_dashboard.html"]:::mapStyle
+    end
+
+    %% Execution and Data Flow
+    C1 -->|"Validated Telemetry Stream (20 Rows)"| C2
+    C2 -->|"Unrecoverable (0,0) Null Records"| C3
+    C2 -->|"Self-Healed [Lat, Lon] Coordinates"| C4
+    C4 -->|"Spherical Distance Matrix (Sub-meter)"| C5
+    C5 -->|"Discovered Flood Corridors"| C6
+    C5 -->|"Risk Clusters and Infrastructure"| C7
 ```
 
 ---
